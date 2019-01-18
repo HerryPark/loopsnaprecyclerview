@@ -1,5 +1,6 @@
 package com.herry.loopsnaprecyclerview;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -10,165 +11,60 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.herry.loopsnaprecyclerview.lib.AutoLoopPagerSnapExHelper;
-import com.herry.loopsnaprecyclerview.lib.LoopPagerRecyclerViewAdapter;
-import com.herry.loopsnaprecyclerview.lib.PagerSnapExHelper;
+import com.herry.loopsnaprecyclerview.sample.AutoLoopPagerActivity;
+import com.herry.loopsnaprecyclerview.sample.LoopPagerActivity;
+import com.herry.loopsnaprecyclerview.sample.PagerActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView indicator = null;
-    private AutoLoopPagerSnapExHelper snapHelper = null;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        List<String> items = new ArrayList<>();
-        for (int index = 0; index < 3; index++) {
-            items.add(String.valueOf(index));
-        }
+        List<ListItemID> items = new ArrayList<>();
+        items.add(ListItemID.NORMAL);
+        items.add(ListItemID.LOOP);
+        items.add(ListItemID.AUTO_LOOP);
 
-        RecyclerView recyclerView = findViewById(R.id.recycler_view);
+        RecyclerView recyclerView = findViewById(R.id.list);
         if (null != recyclerView) {
             recyclerView.setHasFixedSize(true);
-            recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext(), LinearLayoutManager.HORIZONTAL, false));
+            recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext(), LinearLayoutManager.VERTICAL, false));
             recyclerView.setItemAnimator(null);
 
             recyclerView.setAdapter(new Adapter(items));
-
-            snapHelper = new AutoLoopPagerSnapExHelper();
-            snapHelper.setOnSnappedListener(
-                    new PagerSnapExHelper.OnSnappedListener() {
-                        @Override
-                        public void onSnapped(int position, int itemCount) {
-                            if (null == snapHelper || null == snapHelper.getRecyclerView() || null == snapHelper.getRecyclerView().getAdapter()) {
-                                return;
-                            }
-
-                            updateIndicator(position, itemCount);
-                        }
-
-                        @Override
-                        public void onUnsnapped(int position, int itemCount) {
-                        }
-                    }
-            );
-            snapHelper.attachToRecyclerView(recyclerView);
-        }
-
-        indicator = findViewById(R.id.indicator);
-
-        View previous = findViewById(R.id.previous);
-        if (null != previous) {
-            previous.setOnClickListener(
-                    new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (null != snapHelper) {
-                                snapHelper.snapToPrevious();
-                            }
-                        }
-                    }
-            );
-        }
-        View next = findViewById(R.id.next);
-        if (null != next) {
-            next.setOnClickListener(
-                    new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (null != snapHelper) {
-                                snapHelper.snapToNext();
-                            }
-                        }
-                    }
-            );
-        }
-
-        final TextView auto = findViewById(R.id.auto);
-        if (null != auto) {
-            auto.setOnClickListener(
-                    new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            v.setSelected(!v.isSelected());
-                            auto.setText(v.isSelected() ? "Stop" : "Start");
-                            if (null != snapHelper) {
-                                snapHelper.startAuto(v.isSelected() ? 3000L : 0L);
-                            }
-                        }
-                    }
-            );
-            auto.setSelected(false);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        if (null != snapHelper) {
-            snapHelper.scrollToSnapPosition(0);
-        }
     }
 
-    private void updateIndicator(int position, int total) {
-        if (null == indicator) {
-            return;
-        }
-
-        indicator.setText(String.valueOf(position + 1).concat("/").concat(String.valueOf(total)));
+    private enum ListItemID {
+        NORMAL,
+        LOOP,
+        AUTO_LOOP
     }
 
-    private class Adapter extends LoopPagerRecyclerViewAdapter<Adapter.Holder, String> {
-        Adapter(List<String> items) {
-            setItems(items);
-        }
-
-        @NonNull
-        @Override
-        public Holder onCreateViewHolder(@NonNull ViewGroup viewGroup, int type) {
-            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.list_item, viewGroup, false);
-            return new Holder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull Holder holder, int position) {
-            String item = getItem(position);
-            if (null != holder.text) {
-                holder.text.setText(item);
-            }
-        }
-
-        class Holder extends RecyclerView.ViewHolder {
-            TextView text;
-            Holder(@NonNull View itemView) {
-                super(itemView);
-
-                text = itemView.findViewById(R.id.list_item_text);
-            }
-        }
-    }
-/*
     private class Adapter extends RecyclerView.Adapter<Adapter.Holder> {
-        Adapter(List<String> items) {
-            setItems(items);
-        }
-
         @NonNull
-        private final List<String> items = new ArrayList<>();
-        private void setItems(List<String> items) {
+        private final List<ListItemID> items = new ArrayList<>();
+
+        Adapter(List<ListItemID> items) {
             this.items.clear();
-            this.items.addAll(items);
+            if (null != items) {
+                this.items.addAll(items);
+            }
 
             notifyDataSetChanged();
         }
 
-        private String getItem(int position) {
+        private ListItemID getItem(int position) {
             if (0 <= position && position < items.size()) {
                 return items.get(position);
             }
@@ -190,9 +86,27 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull Holder holder, int position) {
-            String item = getItem(position);
+            ListItemID item = getItem(position);
+
+            String text = "";
+            if (null != item) {
+                switch (item) {
+                    case NORMAL: {
+                        text = "Normal Pager";
+                        break;
+                    }
+                    case LOOP: {
+                        text = "Manual Looping Pager";
+                        break;
+                    }
+                    case AUTO_LOOP: {
+                        text = "Automatic Looping Pager";
+                        break;
+                    }
+                }
+            }
             if (null != holder.text) {
-                holder.text.setText(item);
+                holder.text.setText(text);
             }
         }
 
@@ -202,7 +116,35 @@ public class MainActivity extends AppCompatActivity {
                 super(itemView);
 
                 text = itemView.findViewById(R.id.list_item_text);
+
+                itemView.setOnClickListener(
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                ListItemID item = getItem(Holder.this.getAdapterPosition());
+                                if (null != item) {
+                                    Intent intent = null;
+                                    switch (item) {
+                                        case NORMAL: {
+                                            intent = new Intent(MainActivity.this, PagerActivity.class);
+                                            break;
+                                        }
+                                        case LOOP: {
+                                            intent = new Intent(MainActivity.this, LoopPagerActivity.class);
+                                            break;
+                                        }
+                                        case AUTO_LOOP: {
+                                            intent = new Intent(MainActivity.this, AutoLoopPagerActivity.class);
+                                            break;
+                                        }
+                                    }
+
+                                    startActivity(intent);
+                                }
+                            }
+                        }
+                );
             }
         }
-    }*/
+    }
 }
