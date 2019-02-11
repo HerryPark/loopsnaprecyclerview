@@ -23,9 +23,13 @@ public abstract class LoopPagerRecyclerViewAdapter<VH extends RecyclerView.ViewH
         notifyDataSetChanged();
 
         // sets default position
-        if (1 < this.items.size()) {
+        int itemCounts = this.items.size();
+        if (1 < itemCounts) {
             maxItemCounts = Integer.MAX_VALUE;
             defaultPosition = (maxItemCounts / 2) - ((maxItemCounts / 2) % this.items.size());
+        } else if (0 < itemCounts) {
+            maxItemCounts = itemCounts;
+            defaultPosition = 0;
         } else {
             maxItemCounts = this.items.size();
         }
