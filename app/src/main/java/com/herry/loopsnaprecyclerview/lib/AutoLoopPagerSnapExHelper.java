@@ -1,14 +1,64 @@
 package com.herry.loopsnaprecyclerview.lib;
 
+import android.annotation.SuppressLint;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.widget.RecyclerView;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
+@SuppressWarnings("unused")
 public class AutoLoopPagerSnapExHelper extends LoopPagerSnapExHelper {
     // auto scrolling loop pager snap
-    private Timer timer = null;
     private long period = 0;
+
+    private final Object timerLock = new Object();
+    private static final int MSG_NEXT = 1;
+    @SuppressLint("HandlerLeak")
+    private Handler timerHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_NEXT : {
+                    RecyclerView recyclerView = getRecyclerView();
+                    if ((null != recyclerView)
+                            && recyclerView.isAttachedToWindow()
+                            && recyclerView.isShown()
+                            && (recyclerView.getScrollState() == RecyclerView.SCROLL_STATE_IDLE)) {
+                        snapToNext();
+                    }
+                    sendMessageNext(period);
+                    break;
+                }
+            }
+        }
+    };
+
+    private void sendMessageNext(long period) {
+        synchronized (timerLock) {
+            timerHandler.removeCallbacksAndMessages(null);
+            if (0 < period) {
+                Message message = new Message();
+                message.what = MSG_NEXT;
+                timerHandler.sendMessageDelayed(message, period);
+            }
+        }
+    }
+
+    private void enableAuto(boolean enable) {
+        RecyclerView recyclerView = getRecyclerView();
+        if (null == recyclerView) {
+            return;
+        }
+
+        stopTimer();
+
+        if (enable) {
+            sendMessageNext(period);
+        }
+    }
+
+    public void setPeriod(long period) {
+        this.period = period;
+    }
 
     public void startAuto(long period) {
         enableAuto(false);
@@ -19,45 +69,19 @@ public class AutoLoopPagerSnapExHelper extends LoopPagerSnapExHelper {
         }
     }
 
-    public void stopAuto() {
-        enableAuto(false);
-
-        this.period = 0;
+    public void startAuto() {
+        if (0 < this.period) {
+            enableAuto(true);
+        }
     }
 
-    private void enableAuto(boolean enable) {
-        RecyclerView recyclerView = getRecyclerView();
-        if (null == recyclerView) {
-            return;
-        }
+    public void stopAuto() {
+        enableAuto(false);
+    }
 
-        if (enable) {
-            if (period > 0) {
-                timer = new Timer();
-                timer.scheduleAtFixedRate(new TimerTask() {
-                    @Override
-                    public void run() {
-                        RecyclerView recyclerView = getRecyclerView();
-                        if (null == recyclerView || !recyclerView.isAttachedToWindow()) {
-                            return;
-                        }
-
-                        if (recyclerView.getScrollState() == RecyclerView.SCROLL_STATE_IDLE) {
-                            recyclerView.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    snapToNext();
-                                }
-                            });
-                        }
-                    }
-                }, period, period);
-            }
-        } else {
-            if (timer != null) {
-                timer.cancel();
-                timer = null;
-            }
+    private void stopTimer() {
+        synchronized (timerLock) {
+            timerHandler.removeCallbacksAndMessages(null);
         }
     }
 }

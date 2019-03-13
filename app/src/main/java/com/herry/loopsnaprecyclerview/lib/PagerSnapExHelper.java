@@ -12,7 +12,16 @@ public class PagerSnapExHelper extends PagerSnapHelper {
         void onUnsnapped(int position, int itemCount);
     }
 
-    private OnSnappedListener onSnappedListener = null;
+    private OnSnappedListener onSnappedListener = new OnSnappedListener() {
+        @Override
+        public void onSnapped(int position, int itemCount) {
+        }
+
+        @Override
+        public void onUnsnapped(int position, int itemCount) {
+        }
+    };
+
     private int snappedPosition = RecyclerView.NO_POSITION;
     private RecyclerView recyclerView = null;
 
