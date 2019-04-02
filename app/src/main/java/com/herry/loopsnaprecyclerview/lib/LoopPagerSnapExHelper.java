@@ -47,16 +47,14 @@ public class LoopPagerSnapExHelper extends PagerSnapExHelper {
 
         RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
         OnSnappedListener onSnappedListener = getOnSnappedListener();
-        if (null != layoutManager && null != onSnappedListener) {
-            if(snappedRealPosition != position) {
-                // gets fake position from real position
-                int fakePosition = ((LoopPagerRecyclerViewAdapter) recyclerView.getAdapter()).getFakePosition(position);
-                if (RecyclerView.NO_POSITION == fakePosition) {
-                    return;
-                }
 
+        if (null != layoutManager && null != onSnappedListener) {
+            int snapViewPosition = findTargetSnapViewPosition(layoutManager, recyclerView.computeHorizontalScrollOffset(), recyclerView.computeVerticalScrollOffset());
+            int fakePosition = ((LoopPagerRecyclerViewAdapter) recyclerView.getAdapter()).getFakePosition(position);
+            if(snapViewPosition != fakePosition) {
                 int totalRealItemCounts = ((LoopPagerRecyclerViewAdapter) recyclerView.getAdapter()).getRealItemCount();
                 layoutManager.scrollToPosition(fakePosition);
+
                 int unsnappedPosition = RecyclerView.NO_POSITION;
                 if (snappedRealPosition >= 0) {
                     unsnappedPosition = snappedRealPosition;

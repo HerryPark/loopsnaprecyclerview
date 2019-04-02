@@ -78,11 +78,15 @@ public class PagerSnapExHelper extends PagerSnapHelper {
 
         RecyclerView.LayoutManager layoutManager = this.recyclerView.getLayoutManager();
         if (null != layoutManager && null != onSnappedListener) {
-            if(snappedPosition != position) {
+            int snapViewPosition = findTargetSnapViewPosition(layoutManager, this.recyclerView.computeHorizontalScrollOffset(), this.recyclerView.computeVerticalScrollOffset());
+            if(snapViewPosition != position) {
                 int itemCount = this.recyclerView.getAdapter().getItemCount();
                 layoutManager.scrollToPosition(position);
 
-                int unsnappedPosition = snappedPosition;
+                int unsnappedPosition = RecyclerView.NO_POSITION;
+                if (snappedPosition >= 0) {
+                    unsnappedPosition = snappedPosition;
+                }
                 snappedPosition = position;
                 notifySnapped(unsnappedPosition, snappedPosition, itemCount);
             }
