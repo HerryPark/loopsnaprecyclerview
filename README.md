@@ -6,5 +6,7 @@ Also automatic looping is possible.
 
 Screen
 ------
-![Screeshots](/snapshots/screens.gif)
+![Screeshots](/snapshots/screens.gif){: width="50%" height="50%"}
+
+
 
