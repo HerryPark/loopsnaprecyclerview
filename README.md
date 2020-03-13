@@ -6,7 +6,7 @@ Also automatic looping is possible.
 
 Screen
 ------
-<img src="/snapshots/screens.gif" width="60%" height="60%">
+<img src="/snapshots/screens.gif" width="40%" height="40%">
 
 
 
